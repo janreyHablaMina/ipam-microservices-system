@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\AuditLog;
 use App\Models\IpAddress;
 use Illuminate\Http\Request;
 
@@ -26,6 +27,15 @@ class IpAddressController extends Controller
             'comment' => $validated['comment'] ?? null,
             'created_by' => $creatorId,
         ]);
+
+        $this->writeAuditLog(
+            request: $request,
+            action: 'create',
+            entityType: 'ip_address',
+            entityId: (int) $ip->id,
+            oldValues: null,
+            newValues: $ip->toArray(),
+        );
 
         return response()->json([
             'message' => 'IP address created successfully',
@@ -55,11 +65,22 @@ class IpAddressController extends Controller
             $validated['ip_version'] = str_contains($validated['ip_address'], ':') ? 'ipv6' : 'ipv4';
         }
 
+        $oldValues = $ip->toArray();
         $ip->update($validated);
+        $freshIp = $ip->fresh();
+
+        $this->writeAuditLog(
+            request: $request,
+            action: 'update',
+            entityType: 'ip_address',
+            entityId: (int) $ip->id,
+            oldValues: $oldValues,
+            newValues: $freshIp?->toArray(),
+        );
 
         return response()->json([
             'message' => 'IP address updated successfully',
-            'data' => $ip->fresh(),
+            'data' => $freshIp,
         ]);
     }
 
@@ -81,10 +102,44 @@ class IpAddressController extends Controller
             ], 404);
         }
 
+        $oldValues = $ip->toArray();
         $ip->delete();
+
+        $this->writeAuditLog(
+            request: $request,
+            action: 'delete',
+            entityType: 'ip_address',
+            entityId: (int) $id,
+            oldValues: $oldValues,
+            newValues: null,
+        );
 
         return response()->json([
             'message' => 'IP address deleted successfully.',
         ], 200);
+    }
+
+    private function writeAuditLog(
+        Request $request,
+        string $action,
+        string $entityType,
+        ?int $entityId,
+        ?array $oldValues,
+        ?array $newValues
+    ): void {
+        AuditLog::create([
+            'user_id' => (int) $request->attributes->get('auth_user_id'),
+            'action' => $action,
+            'entity_type' => $entityType,
+            'entity_id' => $entityId,
+            'old_values' => $oldValues,
+            'new_values' => $newValues,
+            'meta' => [
+                'path' => $request->path(),
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ],
+        ]);
     }
 }
