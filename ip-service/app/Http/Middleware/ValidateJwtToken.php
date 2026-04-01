@@ -19,12 +19,14 @@ class ValidateJwtToken
         try {
             $payload = JWTAuth::parseToken()->getPayload();
             $userId = (int) $payload->get('sub');
+            $userRole = (string) ($payload->get('role') ?? 'user');
 
             if ($userId <= 0) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
 
             $request->attributes->set('auth_user_id', $userId);
+            $request->attributes->set('auth_user_role', $userRole);
         } catch (\Throwable $e) {
             return response()->json(['message' => 'Unauthenticated.'], 401);
         }
