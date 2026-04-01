@@ -17,13 +17,14 @@ class IpAddressController extends Controller
         ]);
 
         $ipVersion = str_contains($validated['ip_address'], ':') ? 'ipv6' : 'ipv4';
+        $creatorId = (int) $request->attributes->get('auth_user_id');
 
         $ip = IpAddress::create([
             'ip_address' => $validated['ip_address'],
             'ip_version' => $ipVersion,
             'label' => $validated['label'],
             'comment' => $validated['comment'] ?? null,
-            'created_by' => auth()->id(),
+            'created_by' => $creatorId,
         ]);
 
         return response()->json([
