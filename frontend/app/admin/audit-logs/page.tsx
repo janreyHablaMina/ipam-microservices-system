@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import LogoutButton from "@/components/LogoutButton";
+import UserIpManager from "@/components/UserIpManager";
 import { fetchAuditLogs, MissingAuthTokenError } from "@/lib/api/auditLogs";
 import type { AuditLogFilters } from "@/types/audit";
 
@@ -35,6 +36,46 @@ function stringifyValue(value: unknown): string {
 
 export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps) {
   const sp = await searchParams;
+  const currentView = getFirst(sp.view) === "ips" ? "ips" : "audit";
+
+  if (currentView === "ips") {
+    return (
+      <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 md:px-8">
+        <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-black/20">
+          <header className="mb-5 flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-semibold md:text-3xl">Admin Dashboard</h1>
+              <p className="mt-2 text-sm text-slate-300">
+                Manage all IP records across user and super_admin accounts.
+              </p>
+            </div>
+            <LogoutButton />
+          </header>
+
+          <nav className="mb-4 flex flex-wrap gap-2">
+            <Link
+              href="/admin/audit-logs"
+              className="rounded-md border border-white/20 bg-white/5 px-3 py-1.5 text-sm transition hover:bg-white/10"
+            >
+              Audit Logs
+            </Link>
+            <Link
+              href="/admin/audit-logs?view=ips"
+              className="rounded-md border border-cyan-300/40 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200"
+            >
+              IP Management
+            </Link>
+          </nav>
+
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4 text-sm text-slate-200">
+            You are viewing all IP addresses, including records created by regular users.
+          </div>
+
+          <UserIpManager />
+        </div>
+      </main>
+    );
+  }
 
   const filters: AuditLogFilters = {
     action: getFirst(sp.action) as AuditLogFilters["action"],
@@ -119,13 +160,28 @@ export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps
         <header className="mb-6 rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20 md:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-semibold md:text-3xl">Audit Logs</h1>
+              <h1 className="text-2xl font-semibold md:text-3xl">Admin Dashboard</h1>
               <p className="mt-2 text-sm text-slate-300">
                 Track create, update, delete, and login activity across services.
               </p>
             </div>
             <LogoutButton />
           </div>
+
+          <nav className="mt-4 flex flex-wrap gap-2">
+            <Link
+              href="/admin/audit-logs"
+              className="rounded-md border border-cyan-300/40 bg-cyan-400/10 px-3 py-1.5 text-sm font-medium text-cyan-200"
+            >
+              Audit Logs
+            </Link>
+            <Link
+              href="/admin/audit-logs?view=ips"
+              className="rounded-md border border-white/20 bg-white/5 px-3 py-1.5 text-sm transition hover:bg-white/10"
+            >
+              IP Management
+            </Link>
+          </nav>
 
           <form method="get" className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-3 lg:grid-cols-8">
             <input
