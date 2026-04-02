@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import AuditDateInput from "@/components/AuditDateInput";
+import AuditValueModal from "@/components/AuditValueModal";
 import LogoutButton from "@/components/LogoutButton";
 import UserIpManager from "@/components/UserIpManager";
 import { fetchAuditLogs, MissingAuthTokenError } from "@/lib/api/auditLogs";
@@ -23,25 +25,14 @@ function getActionBadgeClasses(action: string): string {
   return "bg-slate-500/20 text-slate-200 border-slate-400/30";
 }
 
-function stringifyValue(value: unknown): string {
-  if (value === null || value === undefined) return "null";
-  if (typeof value === "string") return value;
-
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
-
 export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps) {
   const sp = await searchParams;
   const currentView = getFirst(sp.view) === "ips" ? "ips" : "audit";
 
   if (currentView === "ips") {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 md:px-8">
-        <div className="mx-auto max-w-7xl rounded-2xl border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-black/20">
+      <main className="min-h-screen bg-slate-950 px-[50px] py-[50px] text-slate-100">
+        <div className="w-full rounded-2xl border border-white/10 bg-slate-900/70 p-6 shadow-lg shadow-black/20">
           <header className="mb-5 flex flex-wrap items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-semibold md:text-3xl">Admin Dashboard</h1>
@@ -104,8 +95,8 @@ export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps
 
   if (errorMessage || !result) {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 md:px-8">
-        <div className="mx-auto max-w-3xl rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6">
+      <main className="min-h-screen bg-slate-950 px-[50px] py-[50px] text-slate-100">
+        <div className="w-full rounded-2xl border border-rose-400/30 bg-rose-500/10 p-6">
           <h1 className="text-2xl font-semibold text-rose-100">Audit Logs Unavailable</h1>
           <p className="mt-3 text-sm text-rose-200">{errorMessage ?? "Unknown error"}</p>
           <p className="mt-2 text-sm text-slate-300">
@@ -155,8 +146,8 @@ export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps
   nextParams.set("page", String(nextPage));
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-8 text-slate-100 md:px-8">
-      <div className="mx-auto max-w-7xl">
+    <main className="min-h-screen bg-slate-950 px-[50px] py-[50px] text-slate-100">
+      <div className="w-full">
         <header className="mb-6 rounded-2xl border border-white/10 bg-slate-900/70 p-5 shadow-lg shadow-black/20 md:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
@@ -217,19 +208,9 @@ export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps
               className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-400"
             />
 
-            <input
-              type="date"
-              name="from"
-              defaultValue={filters.from}
-              className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-400"
-            />
+            <AuditDateInput name="from" defaultValue={filters.from} />
 
-            <input
-              type="date"
-              name="to"
-              defaultValue={filters.to}
-              className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm outline-none transition focus:border-cyan-400"
-            />
+            <AuditDateInput name="to" defaultValue={filters.to} />
 
             <div className="flex gap-2">
               <select
@@ -323,29 +304,11 @@ export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps
                         <td className="px-4 py-3 text-slate-200 md:px-5">{log.entity_type}</td>
                         <td className="px-4 py-3 text-slate-200 md:px-5">{log.entity_id ?? "-"}</td>
                         <td className="px-4 py-3 md:px-5">
-                          <details className="rounded-md border border-white/10 bg-black/20 p-2">
-                            <summary className="cursor-pointer text-xs text-slate-300">
-                              Show values
-                            </summary>
-                            <div className="mt-2 grid gap-2">
-                              <div>
-                                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                                  Old
-                                </p>
-                                <pre className="max-h-28 overflow-auto whitespace-pre-wrap break-all rounded bg-slate-950/70 p-2 text-[11px] text-slate-200">
-                                  {stringifyValue(log.old_values)}
-                                </pre>
-                              </div>
-                              <div>
-                                <p className="text-[11px] uppercase tracking-wide text-slate-400">
-                                  New
-                                </p>
-                                <pre className="max-h-28 overflow-auto whitespace-pre-wrap break-all rounded bg-slate-950/70 p-2 text-[11px] text-slate-200">
-                                  {stringifyValue(log.new_values)}
-                                </pre>
-                              </div>
-                            </div>
-                          </details>
+                          <AuditValueModal
+                            action={log.action}
+                            oldValues={log.old_values}
+                            newValues={log.new_values}
+                          />
                         </td>
                         <td className="px-4 py-3 text-slate-300 md:px-5">
                           {new Date(log.created_at).toLocaleString()}
