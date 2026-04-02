@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'gateway' => [
+        'auth_url' => env('AUTH_SERVICE_URL', 'http://127.0.0.1:8001'),
+        'ip_url' => env('IP_SERVICE_URL', 'http://127.0.0.1:8002'),
+    ],
+
 ];

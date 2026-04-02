@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-const BACKEND_API_BASE_URL = process.env.BACKEND_API_BASE_URL ?? "http://127.0.0.1:8002";
+const GATEWAY_API_BASE_URL = process.env.GATEWAY_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 function buildAuthErrorResponse() {
   return NextResponse.json({ message: "Unauthenticated." }, { status: 401 });
@@ -21,7 +21,7 @@ export async function PUT(
   const { id } = await context.params;
   const body = await request.text();
 
-  const response = await fetch(`${BACKEND_API_BASE_URL}/api/ip-addresses/${id}`, {
+  const response = await fetch(`${GATEWAY_API_BASE_URL}/api/ip/ip-addresses/${id}`, {
     method: "PUT",
     headers: {
       Accept: "application/json",
@@ -55,7 +55,7 @@ export async function DELETE(
 
   const { id } = await context.params;
 
-  const response = await fetch(`${BACKEND_API_BASE_URL}/api/ip-addresses/${id}`, {
+  const response = await fetch(`${GATEWAY_API_BASE_URL}/api/ip/ip-addresses/${id}`, {
     method: "DELETE",
     headers: {
       Accept: "application/json",

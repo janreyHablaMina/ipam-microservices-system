@@ -12,7 +12,7 @@ type AuthServiceLoginResponse = {
   };
 };
 
-const AUTH_API_BASE_URL = process.env.AUTH_API_BASE_URL ?? "http://127.0.0.1:8001";
+const GATEWAY_API_BASE_URL = process.env.GATEWAY_API_BASE_URL ?? "http://127.0.0.1:8000";
 type AppRole = "super_admin" | "user";
 
 function getDashboardPath(role: AppRole): string {
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const response = await fetch(`${AUTH_API_BASE_URL}/api/login`, {
+  const response = await fetch(`${GATEWAY_API_BASE_URL}/api/auth/login`, {
     method: "POST",
     headers: {
       Accept: "application/json",

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
-const BACKEND_API_BASE_URL = process.env.BACKEND_API_BASE_URL ?? "http://127.0.0.1:8002";
+const GATEWAY_API_BASE_URL = process.env.GATEWAY_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 function buildAuthErrorResponse() {
   return NextResponse.json({ message: "Unauthenticated." }, { status: 401 });
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url);
   const query = url.searchParams.toString();
-  const target = `${BACKEND_API_BASE_URL}/api/ip-addresses${query ? `?${query}` : ""}`;
+  const target = `${GATEWAY_API_BASE_URL}/api/ip/ip-addresses${query ? `?${query}` : ""}`;
 
   const response = await fetch(target, {
     method: "GET",
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
   const body = await request.text();
 
-  const response = await fetch(`${BACKEND_API_BASE_URL}/api/ip-addresses`, {
+  const response = await fetch(`${GATEWAY_API_BASE_URL}/api/ip/ip-addresses`, {
     method: "POST",
     headers: {
       Accept: "application/json",

@@ -100,7 +100,7 @@ export default async function AuditLogsPage({ searchParams }: AuditLogsPageProps
           <h1 className="text-2xl font-semibold text-rose-100">Audit Logs Unavailable</h1>
           <p className="mt-3 text-sm text-rose-200">{errorMessage ?? "Unknown error"}</p>
           <p className="mt-2 text-sm text-slate-300">
-            Confirm `ip-service` is running and `/api/audit-logs` is reachable.
+            Confirm gateway is running and `/api/ip/audit-logs` is reachable.
           </p>
           <div className="mt-5">
             <Link

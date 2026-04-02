@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 
 import type { AuditLogFilters, PaginatedAuditLogsResponse } from "@/types/audit";
 
-const BACKEND_API_BASE_URL = process.env.BACKEND_API_BASE_URL;
+const GATEWAY_API_BASE_URL = process.env.GATEWAY_API_BASE_URL;
 
 export class MissingAuthTokenError extends Error {
   constructor() {
@@ -30,8 +30,8 @@ function buildQuery(filters: AuditLogFilters): string {
 export async function fetchAuditLogs(
   filters: AuditLogFilters
 ): Promise<PaginatedAuditLogsResponse> {
-  if (!BACKEND_API_BASE_URL) {
-    throw new Error("BACKEND_API_BASE_URL is not configured");
+  if (!GATEWAY_API_BASE_URL) {
+    throw new Error("GATEWAY_API_BASE_URL is not configured");
   }
 
   const cookieStore = await cookies();
@@ -42,7 +42,7 @@ export async function fetchAuditLogs(
   }
 
   const query = buildQuery(filters);
-  const url = `${BACKEND_API_BASE_URL}/api/audit-logs${query ? `?${query}` : ""}`;
+  const url = `${GATEWAY_API_BASE_URL}/api/ip/audit-logs${query ? `?${query}` : ""}`;
 
   const response = await fetch(url, {
     method: "GET",
