@@ -13,6 +13,11 @@ type AuthServiceLoginResponse = {
 };
 
 const AUTH_API_BASE_URL = process.env.AUTH_API_BASE_URL ?? "http://127.0.0.1:8001";
+type AppRole = "super_admin" | "user";
+
+function getDashboardPath(role: AppRole): string {
+  return role === "super_admin" ? "/admin/audit-logs" : "/user/dashboard";
+}
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as
@@ -58,10 +63,12 @@ export async function POST(request: Request) {
 
   const authPayload = payload as AuthServiceLoginResponse;
 
-  if (authPayload.user.role !== "super_admin") {
+  const role = authPayload.user.role;
+
+  if (role !== "super_admin" && role !== "user") {
     return NextResponse.json(
       {
-        message: "You are authenticated, but your role is not authorized for this page.",
+        message: "You are authenticated, but your role is not authorized for this application.",
       },
       { status: 403 }
     );
@@ -70,6 +77,7 @@ export async function POST(request: Request) {
   const nextResponse = NextResponse.json({
     message: "Login successful",
     user: authPayload.user,
+    redirectTo: getDashboardPath(role),
   });
 
   nextResponse.cookies.set({

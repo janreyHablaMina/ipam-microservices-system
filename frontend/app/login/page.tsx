@@ -3,6 +3,17 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
+type FrontendLoginResponse = {
+  message: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: "super_admin" | "user";
+  };
+  redirectTo: string;
+};
+
 export default function LoginPage() {
   const router = useRouter();
 
@@ -33,7 +44,9 @@ export default function LoginPage() {
         throw new Error(payload?.message ?? `Login failed (${response.status})`);
       }
 
-      router.push("/admin/audit-logs");
+      const payload = (await response.json()) as FrontendLoginResponse;
+
+      router.push(payload.redirectTo);
       router.refresh();
     } catch (submitError) {
       const message =
@@ -50,7 +63,7 @@ export default function LoginPage() {
         <header className="mb-8 text-center md:mb-12">
           <p className="text-sm uppercase tracking-[0.25em] text-cyan-300">IP Management</p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
-            Admin Control Login
+            Dashboard Login
           </h1>
           <p className="mt-3 text-sm text-slate-300 md:text-base">
             Sign in to access audit logs and operational activity.

@@ -9,6 +9,41 @@ use Illuminate\Http\Request;
 
 class IpAddressController extends Controller
 {
+    public function index(Request $request)
+    {
+        $authUserId = (int) $request->attributes->get('auth_user_id');
+        $authUserRole = (string) $request->attributes->get('auth_user_role', 'user');
+
+        $validated = $request->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'sort' => ['nullable', 'in:latest,oldest'],
+        ]);
+
+        $query = IpAddress::query();
+
+        if ($authUserRole !== 'super_admin') {
+            $query->where('created_by', $authUserId);
+        }
+
+        $sort = $validated['sort'] ?? 'latest';
+        $query->orderBy('created_at', $sort === 'oldest' ? 'asc' : 'desc');
+
+        $perPage = (int) ($validated['per_page'] ?? 20);
+        $items = $query->paginate($perPage)->withQueryString();
+
+        return response()->json([
+            'data' => $items->items(),
+            'meta' => [
+                'page' => $items->currentPage(),
+                'per_page' => $items->perPage(),
+                'total' => $items->total(),
+                'total_pages' => $items->lastPage(),
+                'sort' => $sort,
+            ],
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -86,13 +121,8 @@ class IpAddressController extends Controller
 
     public function destroy(Request $request, int $id)
     {
+        $authUserId = (int) $request->attributes->get('auth_user_id');
         $authUserRole = (string) $request->attributes->get('auth_user_role', 'user');
-
-        if ($authUserRole !== 'super_admin') {
-            return response()->json([
-                'message' => 'Forbidden: only super_admin can delete IP addresses.',
-            ], 403);
-        }
 
         $ip = IpAddress::find($id);
 
@@ -100,6 +130,12 @@ class IpAddressController extends Controller
             return response()->json([
                 'message' => 'IP address not found.',
             ], 404);
+        }
+
+        if ($authUserRole !== 'super_admin' && $ip->created_by !== $authUserId) {
+            return response()->json([
+                'message' => 'Forbidden: you can only delete your own IP addresses.',
+            ], 403);
         }
 
         $oldValues = $ip->toArray();
