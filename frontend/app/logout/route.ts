@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
-function buildLogoutResponse(request: Request) {
-  const response = NextResponse.redirect(new URL("/login", request.url));
+function buildLogoutResponse() {
+  const response = NextResponse.json(
+    { message: "Logged out successfully." },
+    { status: 200 }
+  );
 
   response.cookies.set({
     name: "token",
@@ -17,10 +20,10 @@ function buildLogoutResponse(request: Request) {
   return response;
 }
 
-export async function GET(request: Request) {
-  return buildLogoutResponse(request);
+export async function GET() {
+  return buildLogoutResponse();
 }
 
-export async function POST(request: Request) {
-  return buildLogoutResponse(request);
+export async function POST() {
+  return buildLogoutResponse();
 }

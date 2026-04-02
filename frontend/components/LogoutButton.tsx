@@ -13,8 +13,15 @@ export default function LogoutButton() {
     setIsOpen(false);
   }
 
-  function confirmLogout() {
-    window.location.assign("/logout");
+  async function confirmLogout() {
+    try {
+      await fetch("/logout", {
+        method: "POST",
+        headers: { Accept: "application/json" },
+      });
+    } finally {
+      window.location.assign("/login");
+    }
   }
 
   return (

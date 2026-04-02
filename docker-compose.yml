@@ -1,0 +1,124 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ipam-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ipam_user
+      POSTGRES_PASSWORD: ipam_pass
+      POSTGRES_DB: ipam_main
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ipam_user -d ipam_main"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+      args:
+        SERVICE_PATH: auth-service
+    container_name: auth-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: base64:R4P8Gv3D0n8r6k4QmVfWm4nGmN8qS1cG8lM1uW7iP4Q=
+      APP_URL: http://auth-service:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: auth_db
+      DB_USERNAME: ipam_user
+      DB_PASSWORD: ipam_pass
+      JWT_SECRET: 9c4e6f4f3a7d4b3e8c0f1a2b3d4e5f60718293a4b5c6d7e8f90123456789abcd
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    ports:
+      - "8001:8000"
+
+  ip-service:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+      args:
+        SERVICE_PATH: ip-service
+    container_name: ip-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: base64:Q2dXc2JfN0R6bE9yQ2hQWk9mN1M4T0lBdlE5d2xWNUY=
+      APP_URL: http://ip-service:8000
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ip_db
+      DB_USERNAME: ipam_user
+      DB_PASSWORD: ipam_pass
+      AUTH_SERVICE_URL: http://auth-service:8000
+      JWT_SECRET: 9c4e6f4f3a7d4b3e8c0f1a2b3d4e5f60718293a4b5c6d7e8f90123456789abcd
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    ports:
+      - "8002:8000"
+
+  gateway:
+    build:
+      context: .
+      dockerfile: docker/laravel/Dockerfile
+      args:
+        SERVICE_PATH: gateway
+    container_name: gateway-service
+    restart: unless-stopped
+    depends_on:
+      auth-service:
+        condition: service_started
+      ip-service:
+        condition: service_started
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: base64:WmJ6WUJrQnJzT2lJcEhVQ2xkTnVvQ1d2N25MVE9tM0Q=
+      APP_URL: http://gateway-service:8000
+      AUTH_SERVICE_URL: http://auth-service:8000
+      IP_SERVICE_URL: http://ip-service:8000
+      SESSION_DRIVER: file
+      CACHE_STORE: file
+      QUEUE_CONNECTION: sync
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      gateway:
+        condition: service_started
+    environment:
+      NODE_ENV: development
+      GATEWAY_API_BASE_URL: http://gateway-service:8000
+    ports:
+      - "3001:3000"
+
+volumes:
+  postgres_data:
