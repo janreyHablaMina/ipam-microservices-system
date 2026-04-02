@@ -139,6 +139,7 @@ class IpAddressController extends Controller
                 'method' => $request->method(),
                 'ip' => $request->ip(),
                 'user_agent' => $request->userAgent(),
+                'role' => (string) $request->attributes->get('auth_user_role', 'user'),
             ],
         ]);
     }

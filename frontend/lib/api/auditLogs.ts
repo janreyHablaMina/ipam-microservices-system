@@ -19,6 +19,8 @@ function buildQuery(filters: AuditLogFilters): string {
   if (filters.entity_id) params.set("entity_id", filters.entity_id);
   if (filters.from) params.set("from", filters.from);
   if (filters.to) params.set("to", filters.to);
+  if (filters.q) params.set("q", filters.q);
+  if (filters.sort) params.set("sort", filters.sort);
   if (filters.page) params.set("page", filters.page);
   if (filters.per_page) params.set("per_page", filters.per_page);
 

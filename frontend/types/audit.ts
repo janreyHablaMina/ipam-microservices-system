@@ -14,11 +14,13 @@ export type AuditLog = {
 };
 
 export type AuditLogFilters = {
-  action?: "create" | "update" | "delete";
+  action?: AuditAction;
   user_id?: string;
   entity_id?: string;
   from?: string;
   to?: string;
+  q?: string;
+  sort?: "latest" | "oldest";
   page?: string;
   per_page?: string;
 };
@@ -30,5 +32,6 @@ export type PaginatedAuditLogsResponse = {
     per_page: number;
     total: number;
     total_pages: number;
+    sort?: "latest" | "oldest";
   };
 };
